@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# 构建产物
+ClipboardManager.app/
+*.o
+*.swiftmodule
+*.swiftsourceinfo
+
+# Xcode(如果未来转 Xcode 工程)
+xcuserdata/
+*.xcuserstate
+*.xcscheme
+build/
+DerivedData/
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# 其他
+*.log
