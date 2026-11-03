@@ -12,6 +12,8 @@
 - **三种内容**:纯文本、富文本(HTML)、文件路径
 - **即时搜索**:面板内键入即过滤,大小写不敏感
 - **键盘优先**:`↑↓` 切换、`Enter` 粘贴、`Esc` 关闭、`⌘⌫` 删除
+- **条目右键删除**:列表内右键(触摸板双指点按)弹出「删除此记录」
+- **自定义 logo**:菜单栏模板图标自动适配深浅色,App 图标用于启动台与关于窗口
 - **点击即粘贴**:写入剪切板 + 模拟 `⌘V`,无需手动二次操作
 - **本地持久化**:`~/Library/Application Support/ClipboardManager/history.json`,重启后历史仍在
 - **LRU 上限**:100 条,相邻重复自动合并
@@ -20,7 +22,7 @@
 
 ## 截图
 
-> TODO:发布前在 release 中补一张面板截图
+![ClipBoard Pro 面板](docs/screenshot.png)
 
 ## 安装
 
@@ -53,6 +55,7 @@ open ClipboardManager.app
 | `↑` / `↓` | 在结果中上下移动选择 |
 | `Enter` | 写入剪切板 + 模拟 `⌘V` 粘贴到当前 App |
 | 单击条目 | 同上 |
+| 条目上右键 / 触摸板双指点按 | 弹出「删除此记录」菜单 |
 | `⌘⌫` | 删除当前选中项 |
 | `Esc` / 点空白处 | 关闭面板 |
 
@@ -96,8 +99,11 @@ private let maxItems = 100
 ```
 .
 ├── ClipboardManager.swift   # 单文件源码,所有逻辑都在这里
-├── Info.plist                # .app 元数据(LSUIElement=true 隐藏 Dock)
+├── Info.plist                # .app 元数据
 ├── build.sh                  # 一键构建脚本
+├── Assets/                   # 图标资源(状态栏模板图标 + AppIcon.icns)
+├── Tools/gen_icons.swift     # 图标生成脚本(矢量绘制,可重新生成)
+├── docs/screenshot.png       # 界面截图
 ├── LICENSE                   # MIT 许可证
 ├── CHANGELOG.md              # 变更记录
 └── README.md                 # 你正在看的这个文件

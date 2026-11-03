@@ -249,13 +249,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "doc.on.clipboard",
-                                   accessibilityDescription: "Clipboard Pro")
+            button.image = Self.statusBarImage()
             // 让按钮同时响应左键和右键,左键弹面板,右键弹菜单
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.action = #selector(statusItemClicked(_:))
             button.target = self
         }
+    }
+
+    /// 状态栏模板图标:优先使用 Assets/StatusIcon,缺失时回退到系统符号
+    private static func statusBarImage() -> NSImage? {
+        if let url = Bundle.main.url(forResource: "StatusIcon", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            // 模板图由系统按菜单栏深浅色自动着色
+            image.isTemplate = true
+            image.size = NSSize(width: 18, height: 18)
+            return image
+        }
+        let fallback = NSImage(systemSymbolName: "doc.on.clipboard",
+                               accessibilityDescription: "ClipBoard Pro")
+        fallback?.isTemplate = true
+        return fallback
     }
 
     @objc private func statusItemClicked(_ sender: Any?) {
@@ -315,8 +329,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showAbout() {
         let alert = NSAlert()
         alert.alertStyle = .informational
-        alert.icon = NSImage(systemSymbolName: "doc.on.clipboard",
-                             accessibilityDescription: nil)
+        alert.icon = NSApp.applicationIconImage
         alert.messageText = "ClipBoard Pro"
         alert.informativeText = """
             一个 macOS 菜单栏剪切板管理工具
@@ -643,7 +656,7 @@ final class HistoryPanelController {
 
 final class HistoryViewController: NSViewController {
     let searchField: NSSearchField
-    private let tableView: NSTableView
+    private let tableView: HistoryTableView
     private var scrollView: NSScrollView!
     private var items: [ClipboardItem] = []
     private var filtered: [ClipboardItem] = []
@@ -655,7 +668,7 @@ final class HistoryViewController: NSViewController {
 
     init() {
         searchField = NSSearchField()
-        tableView = NSTableView()
+        tableView = HistoryTableView()
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -714,6 +727,12 @@ final class HistoryViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         searchField.delegate = self
+
+        // 右键(触摸板双指点按)删除对应记录
+        tableView.onDeleteRow = { [weak self] row in
+            guard let self = self, row >= 0, row < self.filtered.count else { return }
+            self.onDelete(self.filtered[row])
+        }
 
         self.view = container
     }
@@ -807,6 +826,42 @@ extension HistoryViewController: NSTableViewDataSource, NSTableViewDelegate {
 extension HistoryViewController: NSSearchFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         applyFilter()
+    }
+}
+
+// ============================================================================
+// MARK: - 列表(右键删除)
+// ============================================================================
+
+/// 支持右键弹出菜单的列表
+/// macOS 触摸板"双指轻点"等价于右键,因此会触发同一个菜单
+final class HistoryTableView: NSTableView {
+    var onDeleteRow: ((Int) -> Void)?
+
+    private var contextRow: Int = -1
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let point = convert(event.locationInWindow, from: nil)
+        let row = self.row(at: point)
+        guard row >= 0 else { return nil }
+
+        contextRow = row
+        selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+
+        let menu = NSMenu()
+        let deleteItem = NSMenuItem(title: "删除此记录",
+                                    action: #selector(deleteContextRow),
+                                    keyEquivalent: "")
+        deleteItem.target = self
+        menu.addItem(deleteItem)
+        return menu
+    }
+
+    @objc private func deleteContextRow() {
+        let row = contextRow
+        contextRow = -1
+        guard row >= 0 else { return }
+        onDeleteRow?(row)
     }
 }
 

@@ -38,6 +38,12 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 cp "$EXECUTABLE" "$APP_BUNDLE/Contents/MacOS/$EXECUTABLE"
 cp "$INFO_PLIST" "$APP_BUNDLE/Contents/Info.plist"
 
+# 拷贝图标资源(状态栏模板图标 + App 图标)
+if [ -d "Assets" ]; then
+    echo "==> Copying resources ..."
+    cp -R "Assets/." "$APP_BUNDLE/Contents/Resources/"
+fi
+
 # 清理中间可执行文件
 rm -f "$EXECUTABLE"
 

@@ -3,6 +3,8 @@
 
 # 构建产物
 ClipboardManager.app/
+ClipboardManager.app.zip
+AppIcon.iconset/
 *.o
 *.swiftmodule
 *.swiftsourceinfo
